@@ -92,7 +92,7 @@ while true; do
     # 锁处理结束
 
     TRIGGER_UNIX_TIME=$(date +%s);
-    GIT_COMMIT_MSG="Edit from DokuWiki";
+    GIT_COMMIT_MSG="Edit from DokuWiki on "`date +'%Y-%m-%d %H:%S'`;
     echo $GIT_COMMIT_MSG > $DIR_TEMPFILE/mirrorhelp-sync.txt;
     echo " " >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
     FILE_STRING_1=$(echo -n $RAW_STRING | grep -o -E "[A-Za-z-]+\.txt$" --null-data);
@@ -110,7 +110,7 @@ while true; do
     # ENDOF DEBUG
 
     git fetch;
-    git merge --quiet -m " auto merge. ";
+    git merge origin/master --quiet -m " auto merge. ";
     git push;
     refresh_changes;
     rm ./.lock_doku2git -f
