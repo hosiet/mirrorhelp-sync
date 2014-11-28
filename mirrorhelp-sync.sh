@@ -57,13 +57,28 @@ refresh_changes()
 add_user_msg()
 {
     cd $1/
+    echo " Now in $1"
     for NAME in `ls | grep \.changes$`; do
-        if [ "$(md5sum $NAME)"x = "$(md5sum $NAME.backup)"x ]; then
+	NUMBER1=`wc -l $NAME | grep -o [0-9]*`;
+	NUMBER2=`wc -l $NAME.backup | grep -o [0-9]*`;
+        if [ ! "$NUMBER1" = "$NUMBER2" ]; then
             # 需要获取 EDITOR 信息
             # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
-            EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" .*$");	    # 注意有个 tab
-            EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	[a-zA-Z0-9_-]*$");
-            GIT_COMMIT_MSG=" The Editor of "$NAME".txt is "$EDITOR;
+	    NAME_REAL=`echo $NAME | grep -o "^[a-zA-Z0-9_-]*"`;
+            EDITOR_RAW=$(tail -n 1 ./$NAME | grep -E -o "$NAME_REAL.*$");
+            #EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	".*);
+	    EDITOR_MSG=$EDITOR_RAW;
+            GIT_COMMIT_MSG=" Editor info of "$NAME_REAL".txt: "$EDITOR_MSG;
+
+	    # DEBUG
+	    # echo "\$NAME is $NAME"
+            # echo "\$NAME_REAL is $NAME_REAL"
+	    # echo "\$EDITOR_RAW is $EDITOR_RAW"
+	    # echo "\$EDITOR_MSG is $EDITOR_MSG"
+	    # echo "\$GIT_COMMIT_MSG is $GIT_COMMIT_MSG"
+	    # echo " "
+	    # ENDOF DEBUG
+
             echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
         fi
     done
@@ -101,21 +116,10 @@ while true; do
     add_user_msg $DIR_META;
     add_user_msg $DIR_META/help;
     cd $DIR_PAGE/
-
-    # DEBUG
-    echo "Before Commit."
-    sleep 500;
-    #ENDOF DEBUG
-
     git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
     echo "After commit.";
-
-    # DEBUG
-    sleep 500;
-    # ENDOF DEBUG
-
     git fetch;
-    git merge --quiet -m " auto merge. ";
+    git merge --quiet -m "www-data automatic merge. ";
     git push;
     refresh_changes;
     rm ./.lock_doku2git -f
