@@ -61,8 +61,8 @@ function add_user_msg()
 	if [ "$(md5sum $NAME)"x = "$(md5sum $NAME.backup)"x ]; then
 	    # 需要获取 EDITOR 信息
 	    # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
-	    EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" [a-zA-Z0-9_-]*");	    # 注意有个 tab
-	    EDITOR=$(echo $EDITOR_RAW | grep -o "	[a-zA-Z0-9_-]*$");
+	    EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" .*$");	    # 注意有个 tab
+	    EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	[a-zA-Z0-9_-]*$");
 	    GIT_COMMIT_MSG=" The Editor of "$NAME".txt is "$EDITOR;
 	    echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
 	fi
