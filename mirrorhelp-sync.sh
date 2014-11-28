@@ -40,7 +40,7 @@ GIT_COMMIT_MSG="";
 
 # 第一部分, 未测试
 
-function refresh_changes()
+refresh_changes()
 {
     DIR_CURRENT=`pwd`;
     cd $DIR_META/
@@ -54,7 +54,7 @@ function refresh_changes()
     cd $DIR_CURRENT;
 }
 
-function add_user_msg()
+add_user_msg()
 {
     cd $1/
     for NAME in `ls | grep \.changes$`; do
@@ -71,7 +71,7 @@ function add_user_msg()
 
 # 注：利用 $? 判断上一条命令的返回值
 
-declare -i CHANGE_NUMBER=0;
+# declare -i CHANGE_NUMBER=0;
 refresh_changes;
 cd $DIR_PAGE/
 while true; do
