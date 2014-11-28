@@ -43,13 +43,13 @@ GIT_COMMIT_MSG="";
 function refresh_changes()
 {
     DIR_CURRENT=`pwd`;
-    cd $DIR_META/
+    # cd $DIR_META/
     for NAME in `ls | grep \.changes$`; do
-    	cp ./$NAME.changes ./$NAME.changes.backup;
+    	cp $DIR_META/$NAME $DIR_META/$NAME.backup;
     done
-    cd $DIR_META/help/
+    # cd $DIR_META/help/
     for NAME in `ls | grep \.changes$`; do
-	cp ./$NAME.changes ./$NAME.changes.backup;
+	cp $DIR_META/help/$NAME $DIR_META/help/$NAME.backup;
     done
     cd $DIR_CURRENT;
 }
@@ -58,7 +58,7 @@ function add_user_msg()
 {
     cd $1/
     for NAME in `ls | grep \.changes$`; do
-	if [ "$(md5sum $NAME.changes)"x = "$(md5sum $NAME.changes.backup)"x ] then
+	if [ "$(md5sum $NAME)"x = "$(md5sum $NAME.backup)"x ]; then
 	    # 需要获取 EDITOR 信息
 	    # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
 	    EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" [a-zA-Z0-9_-]*");	    # 注意有个 tab
@@ -74,20 +74,20 @@ function add_user_msg()
 declare -i CHANGE_NUMBER=0;
 refresh_changes;
 cd $DIR_PAGE/
-while 1; do
+while true; do
     cd $DIR_PAGE/
     CHANGE_NUMBER=0;
-    RAW_STRING=inotifywait -e modify delete move ./help/ ./help.txt \
-   ./README.md ./LICENSE;
+    RAW_STRING=`inotifywait --event modify --event delete --event move $DIR_PAGE/help/ $DIR_PAGE/help.txt \
+   $DIR_PAGE/README.md $DIR_PAGE/LICENSE`;
 
     # 进行锁的判断与实验
 
-    if [ -f ./.lock_git2doku ]; then
+    if [ -f $DIR_PAGE/.lock_git2doku ]; then
 	sleep 25;
 	refresh_changes;
 	continue;
     fi
-    touch ./.lock_doku2git
+    touch $DIR_PAGE/.lock_doku2git
 
     # 锁处理结束
 
@@ -97,12 +97,18 @@ while 1; do
     echo " " >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
     FILE_STRING_1=$(echo -n $RAW_STRING | grep -o -E "[A-Za-z-]+\.txt$" --null-data);
     FILE_STRING=$(echo -n $FILE_STRING_1);
-    git add .
-    add_user_msg($DIR_META);
-    add_user_msg($DIR_META/help);
+    git add $DIR_PAGE/.
+    add_user_msg $DIR_META;
+    add_user_msg $DIR_META/help;
     cd $DIR_META/
     cd $DIR_PAGE/
     git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
+    echo "After commit.";
+
+    # DEBUG
+    sleep 500;
+    # ENDOF DEBUG
+
     git fetch;
     git merge --quiet -m " auto merge. ";
     git push;
