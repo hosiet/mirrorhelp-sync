@@ -43,13 +43,13 @@ GIT_COMMIT_MSG="";
 function refresh_changes()
 {
     DIR_CURRENT=`pwd`;
-    # cd $DIR_META/
+    cd $DIR_META/
     for NAME in `ls | grep \.changes$`; do
-    	cp $DIR_META/$NAME $DIR_META/$NAME.backup;
+        cp $DIR_META/$NAME $DIR_META/$NAME.backup;
     done
-    # cd $DIR_META/help/
+    cd $DIR_META/help/
     for NAME in `ls | grep \.changes$`; do
-	cp $DIR_META/help/$NAME $DIR_META/help/$NAME.backup;
+        cp $DIR_META/help/$NAME $DIR_META/help/$NAME.backup;
     done
     cd $DIR_CURRENT;
 }
@@ -58,14 +58,14 @@ function add_user_msg()
 {
     cd $1/
     for NAME in `ls | grep \.changes$`; do
-	if [ "$(md5sum $NAME)"x = "$(md5sum $NAME.backup)"x ]; then
-	    # 需要获取 EDITOR 信息
-	    # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
-	    EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" .*$");	    # 注意有个 tab
-	    EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	[a-zA-Z0-9_-]*$");
-	    GIT_COMMIT_MSG=" The Editor of "$NAME".txt is "$EDITOR;
-	    echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
-	fi
+        if [ "$(md5sum $NAME)"x = "$(md5sum $NAME.backup)"x ]; then
+            # 需要获取 EDITOR 信息
+            # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
+            EDITOR_RAW=$(tail -n 1 ./$NAME.changes | grep -E -o $NAME" .*$");	    # 注意有个 tab
+            EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	[a-zA-Z0-9_-]*$");
+            GIT_COMMIT_MSG=" The Editor of "$NAME".txt is "$EDITOR;
+            echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
+        fi
     done
 }
 
@@ -83,9 +83,9 @@ while true; do
     # 进行锁的判断与实验
 
     if [ -f $DIR_PAGE/.lock_git2doku ]; then
-	sleep 25;
-	refresh_changes;
-	continue;
+        sleep 25;
+        refresh_changes;
+        continue;
     fi
     touch $DIR_PAGE/.lock_doku2git
 
@@ -100,8 +100,13 @@ while true; do
     git add $DIR_PAGE/.
     add_user_msg $DIR_META;
     add_user_msg $DIR_META/help;
-    cd $DIR_META/
     cd $DIR_PAGE/
+
+    # DEBUG
+    echo "Before Commit."
+    sleep 500;
+    #ENDOF DEBUG
+
     git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
     echo "After commit.";
 
