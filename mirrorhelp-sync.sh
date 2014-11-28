@@ -75,9 +75,22 @@ declare -i CHANGE_NUMBER=0;
 refresh_changes;
 cd $DIR_PAGE/
 while 1; do
+    cd $DIR_PAGE/
     CHANGE_NUMBER=0;
     RAW_STRING=inotifywait -e modify delete move ./help/ ./help.txt \
    ./README.md ./LICENSE;
+
+    # 进行锁的判断与实验
+
+    if [ -f ./.lock_git2doku ]; then
+	sleep 25;
+	refresh_changes;
+	continue;
+    fi
+    touch ./.lock_doku2git
+
+    # 锁处理结束
+
     TRIGGER_UNIX_TIME=$(date +%s);
     GIT_COMMIT_MSG="Edit from DokuWiki";
     echo $GIT_COMMIT_MSG > $DIR_TEMPFILE/mirrorhelp-sync.txt;
@@ -92,5 +105,7 @@ while 1; do
     git pull;
     git push;
     refresh_changes;
+    rm ./.lock_doku2git -f
+    sleep 5;
 done
 
