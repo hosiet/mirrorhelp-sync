@@ -94,6 +94,7 @@ while 1; do
     TRIGGER_UNIX_TIME=$(date +%s);
     GIT_COMMIT_MSG="Edit from DokuWiki";
     echo $GIT_COMMIT_MSG > $DIR_TEMPFILE/mirrorhelp-sync.txt;
+    echo " " >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
     FILE_STRING_1=$(echo -n $RAW_STRING | grep -o -E "[A-Za-z-]+\.txt$" --null-data);
     FILE_STRING=$(echo -n $FILE_STRING_1);
     git add .
@@ -102,7 +103,8 @@ while 1; do
     cd $DIR_META/
     cd $DIR_PAGE/
     git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
-    git pull;
+    git fetch;
+    git merge --quiet -m " auto merge. ";
     git push;
     refresh_changes;
     rm ./.lock_doku2git -f
