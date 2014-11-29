@@ -12,10 +12,10 @@ DIR_CURRENT=`pwd`;
 GIT_COMMIT_MSG="";
 
 cd $DIR_PAGE/;
-while 1; do
-    touch .lock_git2doku;
-    git pull;
-    rm .lock_git2doku -f;
-    sleep 357;
+while [ -f .lock_doku2git ]; do
+	sleep 60;
 done
+touch .lock_git2doku;
+git pull;
+rm .lock_git2doku -f;
 
