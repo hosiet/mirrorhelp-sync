@@ -12,10 +12,15 @@ DIR_CURRENT=`pwd`;
 GIT_COMMIT_MSG="";
 
 cd $DIR_PAGE/;
+if ! [ -f .lastcommit ]; then
+	touch .lastcommit;
+	echo $(git show HEAD --pretty=oneline | grep -o "^[0-9a-f][0-9a-f][0-9a-f]* ") > .lastcommit;
+fi
+	
 while 1; do
     touch .lock_git2doku;
     git pull;
     rm .lock_git2doku -f;
-    sleep 357;
+    sleep 7200;
 done
 
