@@ -11,3 +11,5 @@ ExecStart=/var/www/src/mirrorhelp-sync/mirrorhelp-sync.sh
 WantedBy=multi-user.target
 
 # Copy me to /etc/systemd/service/
+#
+# see https://lug.ustc.edu.cn/wiki/serveradm/lug/start

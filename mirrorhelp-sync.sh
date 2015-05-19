@@ -3,7 +3,7 @@
 
 # 自动同步 data/pages/mirrors/ 目录下的文件更改，并合并历史记录
 #
-## @todo POSIX shell script compatible
+# See lug.ustc.edu.cn/wiki/serveradm/lug/start
 # 
 # 需求：
 # ==============
