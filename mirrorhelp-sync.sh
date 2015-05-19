@@ -1,4 +1,5 @@
 #!/bin/sh
+# -*- coding: utf-8 -*-
 
 # 自动同步 data/pages/mirrors/ 目录下的文件更改，并合并历史记录
 #
@@ -42,18 +43,21 @@ GIT_COMMIT_MSG="";
 
 refresh_changes()
 {
-    DIR_CURRENT=`pwd`;
+    DIR_CURRENT=$(pwd);                     # 保存现场
     cd $DIR_META/
     for NAME in `ls | grep \.changes$`; do
-        cp $DIR_META/$NAME $DIR_META/$NAME.backup;
+        su www-data --command "cp $DIR_META/$NAME $DIR_META/$NAME.backup;"
     done
     cd $DIR_META/help/
     for NAME in `ls | grep \.changes$`; do
-        cp $DIR_META/help/$NAME $DIR_META/help/$NAME.backup;
+        su www-data --command "cp $DIR_META/help/$NAME $DIR_META/help/$NAME.backup;"
     done
-    cd $DIR_CURRENT;
+    cd $DIR_CURRENT;                        # 恢复现场
 }
 
+##
+# 向 ${DIR_TMPFILE}/mirrorhelp-sync.txt 文件写入 git commit msg
+#
 add_user_msg()
 {
     cd $1/
@@ -63,65 +67,67 @@ add_user_msg()
 	NUMBER2=$(wc -l $NAME.backup | grep -o [0-9]*);
         if [ ! "$NUMBER1" = "$NUMBER2" ]; then
             # 需要获取 EDITOR 信息
-            # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
 	    NAME_REAL=`echo $NAME | grep -o "^[a-zA-Z0-9_-]*"`;
             EDITOR_RAW=$(tail -n 1 ./$NAME | grep -E -o "$NAME_REAL.*$");
             #EDITOR_MSG=$(echo $EDITOR_RAW | grep -o "	".*);
 	    EDITOR_MSG=$EDITOR_RAW;
             GIT_COMMIT_MSG=" Editor info of "$NAME_REAL".txt: "$EDITOR_MSG;
-
-	    # DEBUG
-	    # echo "\$NAME is $NAME"
-            # echo "\$NAME_REAL is $NAME_REAL"
-	    # echo "\$EDITOR_RAW is $EDITOR_RAW"
-	    # echo "\$EDITOR_MSG is $EDITOR_MSG"
-	    # echo "\$GIT_COMMIT_MSG is $GIT_COMMIT_MSG"
-	    # echo " "
-	    # ENDOF DEBUG
-
-            echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
+            su www-data --command "echo $GIT_COMMIT_MSG >> $DIR_TEMPFILE/mirrorhelp-sync.txt;"
         fi
     done
 }
 
 # 注：利用 $? 判断上一条命令的返回值
 
-refresh_changes;
-cd $DIR_PAGE/
-while true; do
+##
+# 主程序
+#
+main_procedure()
+{
+    refresh_changes;
     cd $DIR_PAGE/
-    CHANGE_NUMBER=0;
-    RAW_STRING=`inotifywait --event modify --event delete --event move $DIR_PAGE/help/ $DIR_PAGE/help.txt \
-   $DIR_PAGE/README.md $DIR_PAGE/LICENSE`;
+    while true; do
+        cd $DIR_PAGE/
+        CHANGE_NUMBER=0;
+        RAW_STRING=$(su www-data --command "inotifywait --event modify --event delete --event move $DIR_PAGE/help/ $DIR_PAGE/help.txt \
+        $DIR_PAGE/README.md $DIR_PAGE/LICENSE");
 
     # 进行锁的判断与实验
 
-    if [ -f $DIR_PAGE/.lock_git2doku ]; then
-        sleep 25;
-        refresh_changes;
-        continue;
-    fi
-    touch $DIR_PAGE/.lock_doku2git
+        if [ -f $DIR_PAGE/.lock_git2doku ]; then
+            sleep 25;
+            refresh_changes;
+            continue;
+        fi
+        su www-data --command "touch $DIR_PAGE/.lock_doku2git"
 
     # 锁处理结束
 
-    TRIGGER_UNIX_TIME=$(date +%s);
-    GIT_COMMIT_MSG="Edit from DokuWiki on "`date +'%Y-%m-%d %H:%S'`;
-    echo $GIT_COMMIT_MSG > $DIR_TEMPFILE/mirrorhelp-sync.txt;
-    echo " " >> $DIR_TEMPFILE/mirrorhelp-sync.txt;
-    FILE_STRING_1=$(echo -n $RAW_STRING | grep -o -E "[A-Za-z-]+\.txt$" --null-data);
-    FILE_STRING=$(echo -n $FILE_STRING_1);
-    git add $DIR_PAGE/.
-    add_user_msg $DIR_META;
-    add_user_msg $DIR_META/help;
-    cd $DIR_PAGE/
-    git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
-    logger -p notice "<mirrorhelp-sync> commit info:\n$(cat $(${DIR_TEMPFILE}/mirrorhelp-sync.txt))"
-    logger -p notice '<mirrorhelp-sync> text changed and committed.'
-    git fetch;
-    git merge origin/master --quiet -m "automatic merge from upstream. ";
-    git push;
-    logger -p info '<mirrorhelp-sync> text pushed to upstream.'
-    refresh_changes;
-    rm ./.lock_doku2git -f
-done
+        TRIGGER_UNIX_TIME=$(date +%s);
+        GIT_COMMIT_MSG="Edit from DokuWiki on "`date +'%Y-%m-%d %H:%S'`;
+        su www-data --command "echo $GIT_COMMIT_MSG > $DIR_TEMPFILE/mirrorhelp-sync.txt;"
+        su www-data --command "echo " " >> $DIR_TEMPFILE/mirrorhelp-sync.txt;"
+        FILE_STRING_1=$(echo -n $RAW_STRING | grep -o -E "[A-Za-z-]+\.txt$" --null-data);
+        FILE_STRING=$(echo -n $FILE_STRING_1);
+
+        su www-data --command "git add $DIR_PAGE/."
+        add_user_msg $DIR_META;
+        add_user_msg $DIR_META/help;
+        cd $DIR_PAGE/
+        su www-data --command "git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff"
+        logger -p notice "<mirrorhelp-sync> commit info:\n$(cat $(${DIR_TEMPFILE}/mirrorhelp-sync.txt))"
+        logger -p notice '<mirrorhelp-sync> text changed and committed.'
+        su www-data --command "git fetch;"
+        su www-data --command "git merge origin/master --quiet -m 'automatic merge from upstream. '"
+        su www-data --command "git push;"
+        logger -p info '<mirrorhelp-sync> text pushed to upstream.'
+        refresh_changes;
+        rm ./.lock_doku2git -f
+    done
+}
+
+#############################################################
+
+main_procedure > /dev/null 2> /dev/null
+
+#############################################################

@@ -4,8 +4,10 @@ Requires=network-online.target
 After=network-online.target
 
 [Service]
-Type=forking
-ExecStart=
+Type=simple
+ExecStart=/var/www/src/mirrorhelp-sync/mirrorhelp-sync.sh
 
 [Install]
 WantedBy=multi-user.target
+
+# Copy me to /etc/systemd/service/
