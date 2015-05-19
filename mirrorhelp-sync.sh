@@ -115,7 +115,7 @@ main_procedure()
         add_user_msg $DIR_META/help;
         cd $DIR_PAGE/
         su www-data --command "git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff"
-        logger -p notice "<mirrorhelp-sync> commit info:\n$(cat $(${DIR_TEMPFILE}/mirrorhelp-sync.txt))"
+        logger -p notice "<mirrorhelp-sync> commit info:\n $(cat ${DIR_TEMPFILE}/mirrorhelp-sync.txt)"
         logger -p notice '<mirrorhelp-sync> text changed and committed.'
         su www-data --command "git fetch;"
         su www-data --command "git merge origin/master --quiet -m 'automatic merge from upstream. '"
@@ -128,6 +128,6 @@ main_procedure()
 
 #############################################################
 
-main_procedure > /dev/null 2> /dev/null
+main_procedure # > /dev/null 2> /dev/null
 
 #############################################################
