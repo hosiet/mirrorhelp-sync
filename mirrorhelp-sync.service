@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync mirrorhelp text between GitHub and DokuWiki
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=
+
+[Install]
+WantedBy=multi-user.target

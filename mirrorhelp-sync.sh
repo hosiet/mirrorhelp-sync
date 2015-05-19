@@ -35,7 +35,7 @@
 DIR_META="/srv/www/wiki/data/meta/mirrors";
 DIR_PAGE="/srv/www/wiki/data/pages/mirrors";
 DIR_TEMPFILE="/tmp";
-DIR_CURRENT=`pwd`;
+DIR_CURRENT=$(pwd);
 GIT_COMMIT_MSG="";
 
 # 第一部分, 未测试
@@ -58,9 +58,9 @@ add_user_msg()
 {
     cd $1/
     echo " Now in $1"
-    for NAME in `ls | grep \.changes$`; do
-	NUMBER1=`wc -l $NAME | grep -o [0-9]*`;
-	NUMBER2=`wc -l $NAME.backup | grep -o [0-9]*`;
+    for NAME in $(ls | grep \.changes$); do
+	NUMBER1=$(wc -l $NAME | grep -o [0-9]*);
+	NUMBER2=$(wc -l $NAME.backup | grep -o [0-9]*);
         if [ ! "$NUMBER1" = "$NUMBER2" ]; then
             # 需要获取 EDITOR 信息
             # shell 中判断两个字符串相等使用 "=", 也可以"==" （非POSIX标准）
@@ -86,7 +86,6 @@ add_user_msg()
 
 # 注：利用 $? 判断上一条命令的返回值
 
-# declare -i CHANGE_NUMBER=0;
 refresh_changes;
 cd $DIR_PAGE/
 while true; do
@@ -117,12 +116,12 @@ while true; do
     add_user_msg $DIR_META/help;
     cd $DIR_PAGE/
     git commit --file=$DIR_TEMPFILE/mirrorhelp-sync.txt --signoff
-    echo "After commit.";
+    logger -p notice "<mirrorhelp-sync> commit info:\n$(cat $(${DIR_TEMPFILE}/mirrorhelp-sync.txt))"
+    logger -p notice '<mirrorhelp-sync> text changed and committed.'
     git fetch;
-    git merge origin/master --quiet -m " www-data automatic merge. ";
+    git merge origin/master --quiet -m "automatic merge from upstream. ";
     git push;
+    logger -p info '<mirrorhelp-sync> text pushed to upstream.'
     refresh_changes;
     rm ./.lock_doku2git -f
-    sleep 5;
 done
-
